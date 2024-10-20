@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext #new
 from keyboard_buttons.default import admin_keyboard
 import time 
 from aiogram import F
+from states.all_states import SalatAdd
 
 
 
@@ -44,3 +45,39 @@ async def send_advert(message:Message,state:FSMContext):
     await message.answer(f"Reklama {count}ta foydalanuvchiga yuborildi")
     await state.clear()
 
+@dp.message(F.text=="Add Salat",IsBotAdminFilter(ADMINS))
+async def add_salat(message:Message, state:FSMContext):
+    await message.answer(text="Salat nomini kiriting!")
+    await state.set_state(SalatAdd.name)
+
+@dp.message(SalatAdd.name)
+async def salat_name(message:Message, state:FSMContext):
+    name = message.text
+
+    await state.update_data(name = name)
+    await message.answer(text="Salat rasmini kiriting!")
+    await state.set_state(SalatAdd.img)
+
+@dp.message(SalatAdd.img)
+async def salat_img(message:Message,state:FSMContext):
+    photo = message.photo[-1].file_id
+    await state.update_data(photo = photo)
+
+    await message.answer(text="Salat haqida ma'lumot kiriting!")
+    await state.set_state(SalatAdd.description) 
+
+
+@dp.message(SalatAdd.description)
+async def salat_description(message:Message,state:FSMContext):
+
+    data = await state.get_data() 
+
+    name = data.get("name")
+    photo = data.get("photo")
+    description = message.text
+
+    db.add_salat(name, photo, description)
+
+    await message.answer(text="Salat ma'lumotlari muvaffaqiyatli saqlandi!")
+
+    await state.clear()

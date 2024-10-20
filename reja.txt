@@ -1,0 +1,2 @@
+Salatlarni bazaga qo'shish kerak oddiy qolda bazaga emas
+Salatlarni admin tomondan bot orqali qo'sha oladiga qilish kerak admin salar qo'shgandu uning rasm malumotlari ham qo'shiladi

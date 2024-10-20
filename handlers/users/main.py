@@ -1,23 +1,48 @@
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram import F
 from loader import dp
 from keyboard_buttons.default import keyboardbutton
-from keyboard_buttons.inline import inlinebutton
+from keyboard_buttons.inline.inlinebutton import get_salad_menu, db
+
 
 @dp.message(F.text=="🥗 Salatlar")
-async def info_salads(message:Message):
-    await message.answer("Bizning salatlar",reply_markup=inlinebutton.min_menu_button) #
+async def info_salads(message: Message):
+    await message.answer("Bizning salatlar", reply_markup=get_salad_menu(page=0))
 
-# @dp.message(F.text.func(lambda  salad: salad in  inlinebutton.salads))
-# async def  salad_info(message:Message):
-#     info = inlinebutton.salads_info.get(message.text)
+# Sahifalar orasida harakatlanish uchun tugmalarni boshqarish
+@dp.callback_query(lambda call: call.data.startswith("left") or call.data.startswith("right"))
+async def navigate_salads(call: CallbackQuery):
+    direction, current_page = call.data.split(":")
+    current_page = int(current_page)
 
-#     photo = info.get("photo")
-#     product = info.get("product")
+    # Harakatlanish logikasi
+    if direction == "left":
+        if current_page == 0:
+            await call.answer("Siz 1 - sahifadasiz", show_alert=True)
+            return
+        current_page -= 1
+    elif direction == "right":
+        if (current_page + 1) * 4 >= len(db.select_all_salads()):
+            await call.answer("Oxirgi sahifada turibsiz", show_alert=True)
+            return
+        current_page += 1
 
-#     text = f"{message.text} \nSalat: {product}"
+    # Yangi menyuni jo'natamiz
+    await call.message.edit_reply_markup(reply_markup=get_salad_menu(page=current_page))
 
-#     await message.answer_photo(photo=photo,caption=text, reply_markup=inlinebutton.min_menu_button)
+# Salat tavsifini ko'rsatish
+@dp.callback_query(lambda call: call.data.startswith("salad:"))
+async def show_salad_description(call: CallbackQuery):
+    salad_name = call.data.split(":")[1]
+    salad = db.select_salad_by_name(salad_name)
+    if salad:
+        name, photo, description = salad
+        message_text = f"{name} salatasi\n\n{description}"
+        await call.message.answer_photo(photo=photo, caption=message_text, reply_markup=get_salad_menu(0))
+    else:
+        await call.message.answer("Bunday salat topilmadi.")
+    await call.answer()  # Xabarni ko'rsatish uchun
+
 
 @dp.message(F.text=="🛎 Zakz qilish")
 async def order_salad(message:Message):

@@ -1,7 +1,7 @@
 from aiogram.types import Message
 from loader import dp, bot, ADMINS
 from aiogram.filters import Command
-from states.help_stt import Help
+from states.all_states import Help
 from aiogram.fsm.context import FSMContext
 
 @dp.message(Command("xabar"))

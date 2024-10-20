@@ -6,7 +6,8 @@ admin_button = ReplyKeyboardMarkup(
         [
             KeyboardButton(text="Foydalanuvchilar soni"),
             KeyboardButton(text="Reklama yuborish"),
-        ]
+            KeyboardButton(text="Add Salat"),
+        ]   
         
     ],
    resize_keyboard=True,
